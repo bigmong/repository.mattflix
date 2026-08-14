@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """Generates a Kodi-installable repository structure for each Kodi-version folder that
-exists at the repo root (KODI_VERSIONS below). Ported from jurialmunkey's
-repository.jurialmunkey/_repo_generator.py -- same incremental behaviour: existing zips
-are never rebuilt or removed, only new/changed addon versions get a fresh zip, and
-addons.xml/addons.xml.md5 are updated in place. Run from the repo root, after updating
-submodules:
+exists at the repo root (KODI_VERSIONS below). 
+Existing zips are never rebuilt or removed, only new/changed addon versions get a fresh
+zip, and addons.xml/addons.xml.md5 are updated in place. Run from the repo root, after
+updating submodules:
 
     git submodule update --init --recursive --remote
     python3 repo_generator.py
