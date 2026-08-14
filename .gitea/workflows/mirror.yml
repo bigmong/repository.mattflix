@@ -16,4 +16,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           set -euo pipefail
+          git config user.name "Gitea Actions Bot"
+          git config user.email "actions@gitea.local"
+          # Strip .gitea/ at the git level (not just the filesystem) so the submodule
+          # reference under omega/ is preserved correctly in the pushed tree.
+          git rm -r --cached --ignore-unmatch .gitea >/dev/null
+          rm -rf .gitea
+          if ! git diff --cached --quiet; then
+            git commit -q -m "chore: strip .gitea for GitHub mirror"
+          fi
           git push --force "https://${GH_TOKEN}@github.com/bigmong/repository.mattflix.git" HEAD:main
