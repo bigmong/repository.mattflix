@@ -9,14 +9,14 @@ updating submodules:
     python3 repo_generator.py
 
 Layout:
-    repo/                 -- version-agnostic: the repository.mattflixhelper meta-addon
+    repo/                 -- version-agnostic: the repository.mattflix meta-addon
                               itself, plus any addon with no Kodi-version constraints
     omega/                -- addons built for Kodi Omega (20.9.1+), e.g.
                               plugin.video.mattflix.helper as a git submodule
 
 Adding a Kodi-version folder later (e.g. "piers") is just: add it to KODI_VERSIONS below,
 `git submodule add <url> piers/<addon-id>`, and add a matching <dir minversion="..."> block
-to repo/repository.mattflixhelper/addon.xml.
+to repo/repository.mattflix/addon.xml.
 """
 from __future__ import annotations
 
@@ -32,12 +32,12 @@ IGNORE = {".git", ".gitea", ".github", ".gitignore", ".gitmodules", ".DS_Store",
 ROOT = Path(__file__).resolve().parent
 
 
-def _create_zip(release_path: Path, zips_path: Path, addon_id: str, version: str) -> None:
-    """Zips release_path/addon_id into zips_path/addon_id/<addon_id>-<version>.zip, with
-    every entry rooted at "<addon_id>/..." -- required by Kodi. Skipped if that exact
-    version's zip already exists, so older versions are never rebuilt or lost.
+def _create_zip(addon_folder: Path, zips_path: Path, addon_id: str, version: str) -> None:
+    """Zips addon_folder into zips_path/addon_id/<addon_id>-<version>.zip, with every entry
+    rooted at "<addon_id>/..." -- required by Kodi. Skipped if that exact version's zip
+    already exists, so older versions are never rebuilt or lost. addon_folder's own name
+    doesn't need to match addon_id -- only the zip's internal folder does.
     """
-    addon_folder = release_path / addon_id
     zip_folder = zips_path / addon_id
     zip_folder.mkdir(parents=True, exist_ok=True)
 
@@ -56,11 +56,10 @@ def _create_zip(release_path: Path, zips_path: Path, addon_id: str, version: str
     print(f"Zip created for {addon_id} ({version})")
 
 
-def _copy_meta_files(release_path: Path, zips_path: Path, addon_id: str) -> None:
+def _copy_meta_files(addon_folder: Path, zips_path: Path, addon_id: str) -> None:
     """Copies addon.xml plus any asset files it references (icon, fanart, etc.) next to
     the zip -- standard Kodi repo convention, used for browsing/changelog before install.
     """
-    addon_folder = release_path / addon_id
     tree = ElementTree.parse(addon_folder / "addon.xml")
     copy_files = ["addon.xml"]
     for ext in tree.getroot().findall("extension"):
@@ -133,8 +132,8 @@ def generate(release_path: Path) -> None:
             addons_root.append(addon_root)
         changed = True
 
-        _create_zip(release_path, zips_path, addon_id, version)
-        _copy_meta_files(release_path, zips_path, addon_id)
+        _create_zip(addon_dir, zips_path, addon_id, version)
+        _copy_meta_files(addon_dir, zips_path, addon_id)
         print(f"  {release_path.name}: {addon_id} -> v{version}")
 
     if not changed:

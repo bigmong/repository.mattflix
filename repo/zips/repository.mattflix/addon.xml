@@ -1,5 +1,5 @@
-<?xml version='1.0' encoding='utf-8'?>
-<addons><addon id="repository.mattflix" name="MattFlix Helper Repository" version="1.0.3" provider-name="bigmong">
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="repository.mattflix" name="MattFlix Helper Repository" version="1.0.3" provider-name="bigmong">
     <extension point="xbmc.addon.repository" name="MattFlix Helper Repository">
         <dir>
             <info compressed="false">https://raw.githubusercontent.com/bigmong/repository.mattflix/main/repo/zips/addons.xml</info>
@@ -11,14 +11,15 @@
             <checksum>https://raw.githubusercontent.com/bigmong/repository.mattflix/main/omega/zips/addons.xml.md5</checksum>
             <datadir zip="true">https://raw.githubusercontent.com/bigmong/repository.mattflix/main/omega/zips/</datadir>
         </dir>
-        
+        <!-- Add another <dir minversion="X"> block here (and an omega/-style folder) once Kodi
+             Piers ships and mattflix.helper gets a Piers-targeted build. -->
     </extension>
     <extension point="xbmc.addon.metadata">
         <summary lang="en_GB">Repository for MattFlix Helper addon</summary>
-        <description lang="en_GB" />
+        <description lang="en_GB"></description>
         <platform>all</platform>
         <assets>
             <icon>icon.jpg</icon>
         </assets>
     </extension>
-</addon></addons>
+</addon>
