@@ -4,7 +4,3 @@
 secrets/
 *.log
 __pycache__/
-repo_output/
-
-# Checked out fresh by update_repo.yml on each rebuild -- not part of this repo's history.
-/plugin.video.mattflixhelper/

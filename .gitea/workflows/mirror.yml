@@ -1,0 +1,20 @@
+name: Mirror to GitHub
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  mirror:
+    runs-on: docker01
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Force-push main to GitHub mirror
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          git push --force "https://${GH_TOKEN}@github.com/bigmong/repository.mattflix.git" HEAD:main

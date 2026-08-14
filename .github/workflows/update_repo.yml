@@ -1,0 +1,57 @@
+name: Update Repo
+
+on:
+  repository_dispatch:
+    types: [update]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Update submodules to latest
+        run: |
+          set -euo pipefail
+          git config --global user.name "GitHub Action"
+          git config --global user.email "noreply@github.com"
+          git submodule update --init --recursive --remote -f
+
+      - name: Generate repo (zips, addons.xml, checksums)
+        run: python3 repo_generator.py
+
+      - name: Commit & push
+        run: |
+          set -euo pipefail
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -m ":package: Update ${{ github.event.client_payload.module || 'repo' }} ${{ github.event.client_payload.version }}"
+            git push
+          fi
+
+      - name: Read repository meta-addon version
+        run: |
+          set -euo pipefail
+          VERSION=$(python3 -c "import xml.etree.ElementTree as ET; print(ET.parse('repo/repository.mattflixhelper/addon.xml').getroot().attrib['version'])")
+          echo "REPO_VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Create/update GitHub Release with repository zip
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.REPO_VERSION }}
+          name: Release v${{ env.REPO_VERSION }}
+          prerelease: false
+          files: repo/zips/repository.mattflixhelper/repository.mattflixhelper-${{ env.REPO_VERSION }}.zip

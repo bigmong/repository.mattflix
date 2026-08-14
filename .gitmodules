@@ -1,0 +1,3 @@
+[submodule "omega/plugin.video.mattflixhelper"]
+	path = omega/plugin.video.mattflixhelper
+	url = https://github.com/bigmong/plugin.video.mattflixhelper.git
