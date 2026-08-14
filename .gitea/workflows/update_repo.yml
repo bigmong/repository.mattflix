@@ -27,7 +27,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: BigMong/plugin.video.mattflixhelper
-          token: ${{ secrets.GITEA_PAT }}
+          token: ${{ secrets.GIT_TOKEN }}
           path: plugin.video.mattflixhelper
 
       - name: Read repository meta-addon version
