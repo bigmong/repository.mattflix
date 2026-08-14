@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="repository.mattflix" name="MattFlix Helper Repository" version="1.0.3" provider-name="bigmong">
-    <extension point="xbmc.addon.repository" name="MattFlix Helper Repository">
+<addon id="repository.mattflix" name="MattFlix Repository" version="1.0.4" provider-name="bigmong">
+    <extension point="xbmc.addon.repository" name="MattFlix Repository">
         <dir>
             <info compressed="false">https://raw.githubusercontent.com/bigmong/repository.mattflix/main/repo/zips/addons.xml</info>
             <checksum>https://raw.githubusercontent.com/bigmong/repository.mattflix/main/repo/zips/addons.xml.md5</checksum>
@@ -15,7 +15,7 @@
              Piers ships and mattflix.helper gets a Piers-targeted build. -->
     </extension>
     <extension point="xbmc.addon.metadata">
-        <summary lang="en_GB">Repository for MattFlix Helper addon</summary>
+        <summary lang="en_GB">Repository for MattFlix addon</summary>
         <description lang="en_GB"></description>
         <platform>all</platform>
         <assets>
