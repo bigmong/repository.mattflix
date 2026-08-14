@@ -12,7 +12,7 @@ Layout:
     repo/                 -- version-agnostic: the repository.mattflixhelper meta-addon
                               itself, plus any addon with no Kodi-version constraints
     omega/                -- addons built for Kodi Omega (20.9.1+), e.g.
-                              plugin.video.mattflixhelper as a git submodule
+                              plugin.video.mattflix.helper as a git submodule
 
 Adding a Kodi-version folder later (e.g. "piers") is just: add it to KODI_VERSIONS below,
 `git submodule add <url> piers/<addon-id>`, and add a matching <dir minversion="..."> block
