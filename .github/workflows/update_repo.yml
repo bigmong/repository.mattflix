@@ -56,15 +56,17 @@ jobs:
         run: |
           set -euo pipefail
           git add -A
+          # repo/zips and omega/zips are gitignored so the Gitea side never re-tracks the
+          # generated output -- but this is the side that owns it, so force-add them here.
+          # Without -f, brand new zips would be silently skipped and never published.
+          git add -Af repo omega
           if git diff --cached --quiet; then
             echo "Nothing changed."
           else
-            # Amend into the existing commit (the Gitea-side workflow force-pushes this repo
-            # as a single flat snapshot) and force-push, rather than appending a new commit
-            # -- otherwise the public mirror ends up with 2 commits every publish cycle
-            # instead of staying a single flat snapshot.
-            git commit --amend -q -m ":package: Update ${{ steps.update_submodules.outputs.changed || 'repo' }}"
-            git push --force
+            # A normal appended commit, never an amend/force-push -- each publish stays its
+            # own entry so every zip under */zips/ keeps the date and message it landed with.
+            git commit -q -m ":package: Update ${{ steps.update_submodules.outputs.changed || 'repo' }}"
+            git push
           fi
 
       - name: Read repository meta-addon version
