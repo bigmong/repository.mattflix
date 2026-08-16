@@ -1,0 +1,97 @@
+name: Rebuild Repository Index
+
+on:
+  repository_dispatch:
+    types: [update]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Update submodules to latest
+        id: update_submodules
+        run: |
+          set -euo pipefail
+          git config --global user.name "GitHub Action"
+          git config --global user.email "noreply@github.com"
+
+          # --remote bumps every submodule under omega/ to its latest tip, not just
+          # whichever addon's publish triggered this run -- so snapshot each submodule's
+          # pinned commit before/after and report exactly which addon(s) actually moved,
+          # rather than trusting the triggering event's module/version payload.
+          declare -A BEFORE
+          while read -r sha path _; do
+            BEFORE["$path"]="$sha"
+          done < <(git submodule status)
+
+          git submodule update --init --recursive --remote -f
+
+          CHANGED=""
+          while read -r sha path _; do
+            if [ "${BEFORE[$path]:-}" != "$sha" ]; then
+              NAME=$(basename "$path")
+              VERSION=$(python3 -c "import xml.etree.ElementTree as ET; print(ET.parse('${path}/addon.xml').getroot().attrib['version'])")
+              CHANGED="${CHANGED:+$CHANGED, }${NAME} v${VERSION}"
+            fi
+          done < <(git submodule status)
+          echo "changed=${CHANGED}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate repo (zips, addons.xml, checksums)
+        run: python3 repo_generator.py
+
+      - name: Commit & push
+        run: |
+          set -euo pipefail
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            # Amend into the existing commit (the Gitea-side workflow force-pushes this repo
+            # as a single flat snapshot) and force-push, rather than appending a new commit
+            # -- otherwise the public mirror ends up with 2 commits every publish cycle
+            # instead of staying a single flat snapshot.
+            git commit --amend -q -m ":package: Update ${{ steps.update_submodules.outputs.changed || 'repo' }}"
+            git push --force
+          fi
+
+      - name: Read repository meta-addon version
+        run: |
+          set -euo pipefail
+          VERSION=$(python3 -c "import xml.etree.ElementTree as ET; print(ET.parse('repo/repository.mattflix/addon.xml').getroot().attrib['version'])")
+          echo "REPO_VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Check if this repo version already has a release
+        id: check_release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token ${GH_TOKEN}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/v${REPO_VERSION}")
+          echo "exists=$([ "$STATUS" = "200" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      # Only fires when repository.mattflix/addon.xml's own version is bumped -- a plugin
+      # publish alone regenerates and commits the index above, but must not re-release
+      # (and overwrite) the same v<REPO_VERSION> GitHub Release every time.
+      - name: Create GitHub Release with repository zip
+        if: steps.check_release.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.REPO_VERSION }}
+          name: Release v${{ env.REPO_VERSION }}
+          prerelease: false
+          files: repo/zips/repository.mattflix/repository.mattflix-${{ env.REPO_VERSION }}.zip
